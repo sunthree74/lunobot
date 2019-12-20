@@ -30,4 +30,3 @@ Route::post('password/change', 'UserController@changePassword')->name('password.
 
 Route::get('/edit/welcome', 'CommandController@editWelcomeMessage')->name('welcome.edit');
 Route::post('/update/welcome', 'CommandController@updateWelcomeMessage')->name('welcome.update');
-// Route::get('price', 'CommandController@getHilo');
