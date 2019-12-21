@@ -227,7 +227,7 @@ class CommandController extends Controller
     {
         try {
             if ($m["message"]["from"]["is_bot"] == false) {
-                if (isset($m["message"]["entities"])) {
+                if (isset($m["message"]['text'])) {
                     $sumber = $m["message"];
                     $cmd = $sumber['text'];
                     $this->iduser = $m["message"]["from"]["id"];
@@ -390,7 +390,7 @@ class CommandController extends Controller
                 Session::forget('captcha'.$this->iduser);
                 return 'you have been kicked';
             } else {
-                if (isset($m["message"]["entities"])) {
+                if (isset($m["message"]['text'])) {
                     $sumber = $m["message"];
                     $cmd = $sumber['text'];
                     if ($cmd != $captcha) {
