@@ -245,15 +245,10 @@ class CommandController extends Controller
                     } else {
                         return $this->captcha($m);
                     }
-                } elseif ($m["message"]["new_chat_member"]["is_bot"] == true) {
-                    $this->idchat = $m["message"]["chat"]["id"];
-                    $this->kickMember($m["message"]["new_chat_member"]["id"]);
                 } elseif (isset($m["message"]["new_chat_member"])) {
                     $this->iduser = $m["message"]["from"]["id"];
                     $this->idchat = $m["message"]["chat"]["id"];
                     $this->dynamicData($m["message"]["chat"]["id"],$m["message"]["new_chat_member"]["first_name"],$m["message"]["chat"]["title"]);
-                    // $txt = "Selamat Datang $this->fname di grup $this->titleGroup.\n Semoga anda menikmati konten di grup ini";
-                    // $this->sendMessage($txt);
                     
                     return $this->captcha($m);
                 }  
