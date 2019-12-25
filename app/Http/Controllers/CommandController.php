@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Schema;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Auth;
@@ -9,12 +10,14 @@ use Validator;
 use Illuminate\Http\Request;
 use App\Command;
 use Alert;
+use Log;
 use Telegram;
 use Session;
+use DB;
 
 class CommandController extends Controller
 {
-    private $client, $iduser, $clientBot, $idchat, $fname, $titleGroup, $btcprice, $ethprice, $btchigh, $btclow, $ethhigh, $ethlow, $randomNum1, $randomNum2, $hasilCaptcha, $messageId;
+    private $client, $iduser, $clientBot, $idchat, $fname, $titleGroup, $btcprice, $ethprice, $btchigh, $btclow, $ethhigh, $ethlow, $randomNum1, $randomNum2, $hasilCaptcha, $messageId, $volumeBtc, $volumeEth;
 
     /**
      * Create a new controller instance.
@@ -190,6 +193,8 @@ class CommandController extends Controller
             $txt = str_replace('@ethereumprice@',$this->ethprice,$txt);
             $txt = str_replace('@ethereumhigh@',$this->ethhigh,$txt);
             $txt = str_replace('@ethereumlow@',$this->ethlow,$txt);
+            $txt = str_replace('@volumebtc@',$this->volumeBtc,$txt);
+            $txt = str_replace('@volumeeth@',$this->volumeEth,$txt);
             $txt = str_replace('@date@',date('l, j F Y  H:i:s'),$txt);
             if (isset($btn)) {
                 $response = Telegram::sendMessage([
@@ -225,37 +230,37 @@ class CommandController extends Controller
      */
     public function processMessage($m)
     {
-        try {
-            if ($m["message"]["from"]["is_bot"] == false) {
-                if (isset($m["message"]['text'])) {
+                if (isset($m["message"]["text"])) {
                     $sumber = $m["message"];
-                    $cmd = $sumber['text'];
+                    $cmd = $sumber["text"];
                     $this->iduser = $m["message"]["from"]["id"];
+                    $this->idchat = $m["message"]["chat"]["id"];
                     $this->messageId = $sumber["message_id"];
-                    $this->dynamicData($sumber["chat"]["id"],$sumber["from"]["first_name"]);
-                    if(!Session::has('iduser'.$this->iduser)){
-                        if ( $m["message"]["entities"][0]["type"] == "bot_command") {
-                            if (strpos($cmd, env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME')) !== false) {
-                                $cmd = str_replace(env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME'), '', $cmd);
-                                return $cmd;
-                            }else {
-                                return $cmd;   
+                    $this->userData($sumber["chat"]["id"],$sumber["from"]["first_name"]);
+                    Log::info('iduser-'.$this->iduser.'{Process Message Before Session Check '.date('d-M-Y H:i:s').'}');
+                    if($this->findSession('iduser'.$this->iduser)){
+                        Log::info('iduser-'.$this->iduser.'{Session has checked and return captcha function '.date('d-M-Y H:i:s').'}');
+                        return $this->captcha($m);
+                    } else {
+                        Log::info('iduser-'.$this->iduser.'{Session has checked and return false '.date('d-M-Y H:i:s').'}');
+                        if (isset($m["message"]["entities"])) {
+                            if ( $m["message"]["entities"][0]["type"] == "bot_command") {
+                                if (strpos($cmd, env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME')) !== false) {
+                                    $cmd = str_replace(env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME'), '', $cmd);
+                                    return $cmd;
+                                }else {
+                                    return $cmd;   
+                                }
                             }
                         }
-                    } else {
-                        return $this->captcha($m);
                     }
                 } elseif (isset($m["message"]["new_chat_member"])) {
                     $this->iduser = $m["message"]["from"]["id"];
                     $this->idchat = $m["message"]["chat"]["id"];
-                    $this->dynamicData($m["message"]["chat"]["id"],$m["message"]["new_chat_member"]["first_name"],$m["message"]["chat"]["title"]);
+                    $this->userData($m["message"]["chat"]["id"],$m["message"]["new_chat_member"]["first_name"],$m["message"]["chat"]["title"]);
                     
                     return $this->captcha($m);
-                }  
-            }
-        } catch (Exception $e) {
-            return $e;
-        }
+                }
         
     }
 
@@ -264,6 +269,9 @@ class CommandController extends Controller
         if (isset($cmd)) {
             $message = Command::where('command', $cmd)->first();
 
+            if ($cmd == "/tradingprice") {
+                $this->dynamicData();
+            }
             if (isset($message)) {
                 return $message->message;
             } else {
@@ -301,6 +309,7 @@ class CommandController extends Controller
             'query' => [
                 'chat_id' => $this->idchat,
                 'user_id' => $iduser,
+                'until_date' => time() + (15* 60)
             ]
         ]);
     }
@@ -351,18 +360,35 @@ class CommandController extends Controller
         }
     }
 
+    public function getVolume($crpt='XBT', $cur='MYR')
+    {
+        $client = new Client();
+        $response = $client->request('GET', 'https://api.mybitx.com/api/1/ticker', [
+            'query' => [
+                'pair' => $crpt.$cur
+            ]
+        ]);
+
+        if ($response->getStatusCode() == 200) {
+            $body = (string) $response->getBody()->getContents();
+            $data =  json_decode($body, true);
+            $a = $data["rolling_24_hour_volume"];
+            return $a;
+        } else {
+            return false;
+        }
+    }
+
     public function formatcurrency($floatcurr){
         return "MYR " . number_format($floatcurr,1,'.',',');
     }
 
-    public function dynamicData($idchat, $fname, $titleGroup = NULL)
+    public function dynamicData()
     {
         $priceBtc = $this->getHilo();
         $priceEth = $this->getHilo('ETH');
-
-        $this->idchat = $idchat;
-        $this->fname = $fname;
-        $this->titleGroup = $titleGroup;
+        $volumeBtc = $this->getVolume();
+        $volumeEth = $this->getVolume('ETH');
 
         $this->btcprice = $this->getPrice();
         $this->btchigh = $priceBtc["High"];
@@ -371,55 +397,68 @@ class CommandController extends Controller
         $this->ethprice = $this->getPrice('ETH');
         $this->ethhigh = $priceEth["High"];
         $this->ethlow = $priceEth["Low"];
+
+        $this->volumeBtc = $volumeBtc;
+        $this->volumeEth = $volumeEth;
+    }
+
+    public function userData($idchat, $fname, $titleGroup = NULL)
+    {
+        $this->idchat = $idchat;
+        $this->fname = $fname;
+        $this->titleGroup = $titleGroup;
     }
 
     public function captcha($m)
     {
-        if(Session::has('iduser'.$this->iduser)){
-            $id = Session::get('iduser'.$this->iduser);
-            $captcha = Session::get('captcha'.$this->iduser);
-            $time = time() - Session::get('time'.$this->iduser);
-            $messageid = Session::get('messageid'.$this->iduser);
-            Session::forget('messageid'.$this->iduser);
+        if($this->findSession('iduser'.$this->iduser)){
+            $id = $this->findSession('iduser'.$this->iduser);
+            $captcha = $this->findSession('captcha'.$this->iduser);
+            $time = time() - $this->findSession('time'.$this->iduser);
+            $messageid = $this->findSession('messageid'.$this->iduser);
+            $this->deleteSession('messageid'.$this->iduser);
             if ($time > 60) {
+                Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
                 $this->removeMessage($this->idchat,$messageid);
-                // $this->kickMember($id);
-                Session::forget('messageid'.$this->iduser);
-                Session::forget('time'.$this->iduser);
-                Session::forget('iduser'.$this->iduser);
-                Session::forget('captcha'.$this->iduser);
+                $this->kickMember($id);
+                $this->deleteSession('messageid'.$this->iduser);
+                $this->deleteSession('time'.$this->iduser);
+                $this->deleteSession('iduser'.$this->iduser);
+                $this->deleteSession('captcha'.$this->iduser);
                 return 'you have been kicked';
             } else {
-                if (isset($m["message"]['text'])) {
+                Log::info('iduser-'.$this->iduser.'{Answering Captcha '.date('d-M-Y H:i:s').'}');
+                if (isset($m["message"]["text"])) {
                     $sumber = $m["message"];
-                    $cmd = $sumber['text'];
+                    $cmd = $sumber["text"];
                     if ($cmd != $captcha) {
                         $response = Telegram::sendMessage([
                             'chat_id' => $this->idchat, 
                             'text' => 'Your answer is wrong',
                             'reply_to_message_id' => $this->messageId
                         ]);
-                        Session::put('messageid'.$this->iduser, $response->getMessageId());
+                        $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
                         $this->removeMessage($this->idchat,$messageid);
                         return NULL;
                     }else {
                         $this->removeMessage($this->idchat,$messageid);
-                        Session::forget('messageid'.$this->iduser);
-                        Session::forget('time'.$this->iduser);
-                        Session::forget('iduser'.$this->iduser);
-                        Session::forget('captcha'.$this->iduser);
+                        $this->deleteSession('messageid'.$this->iduser);
+                        $this->deleteSession('time'.$this->iduser);
+                        $this->deleteSession('iduser'.$this->iduser);
+                        $this->deleteSession('captcha'.$this->iduser);
                         return '@welcome';
                     }
                 }
             }
 		}else{
-            Session::put('iduser'.$this->iduser, $this->iduser);
+            Log::info('iduser-'.$this->iduser.'{New Members '.date('d-M-Y H:i:s').'}');
+            $this->insertSession('iduser'.$this->iduser, $this->iduser);
             
             $randomNum1 = \rand(0,9);
             $randomNum2 = \rand(0,9);
             $this->hasilCaptcha = $randomNum1 + $randomNum2;
             
-            Session::put('captcha'.$this->iduser, $this->hasilCaptcha);
+            $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
             $txt = "Hi $this->fname, To verify that you are a human, then you must answer this mathematical operation in 60 seconds. \n";
             $txt .= " $randomNum1 + $randomNum2 = ? \n ";
             $txt .= " If you don't answer then you will be kicked";
@@ -427,8 +466,9 @@ class CommandController extends Controller
                 'chat_id' => $this->idchat, 
                 'text' => $txt
             ]);
-            Session::put('messageid'.$this->iduser, $response->getMessageId());
-            Session::put('time'.$this->iduser, time());
+            $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
+            $this->insertSession('time'.$this->iduser, time());
+            return NULL;
 		}
     }
 
@@ -491,22 +531,61 @@ class CommandController extends Controller
         }
     }
 
-    public function tes()
+    public function insertSession($key, $val)
     {
-        Timer::start('full');
+        try {
+            DB::connection('sqlite')->table('session')->insert([
+                'key' => $key,
+                'value' => $val
+            ]);
+            return true;
+        } catch (Exception $e) {
+            Log::warning("{key : $key and value : $val can't check .error message($e) ".date('d-M-Y H:i:s')."}");
+            return false;
+        }
+        
+    }
 
-        Timer::start('laps');
-        sleep(1);
-        Timer::stop('laps');
-        
-        sleep(2); // This time is not calculated under 'laps'
-        
-        Timer::start('laps');
-        sleep(1);
-        Timer::stop('laps');
-        
-        echo round(Timer::read('full', Timer::FORMAT_SECONDS),0); // 4 seconds.
-        echo "<br />";
-        echo Timer::read('laps', Timer::FORMAT_SECONDS); // 2 seconds (1 + 1)
+    public function findSession($key)
+    {
+        try {
+            $v = DB::connection('sqlite')->table('session')->where('key', $key)->select('value')->first();
+            if ($v) {
+                return $v->value;
+            } else {
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            Log::warning("{key : $key can't check error message($e) ".date('d-M-Y H:i:s')."}");
+            return false;
+        }
+    }
+
+    public function deleteSession($key)
+    {
+        try {
+            DB::connection('sqlite')->table('session')->where('key', $key)->delete();
+            return true;
+        } catch (Exception $e) {
+            Log::warning("{key : $key can't delete error message($e) ".date('d-M-Y H:i:s')."}");
+            return false;
+        }
+    }
+
+    public function createSqlite()
+    {
+        try {
+            Schema::connection('sqlite')->create('session', function($table)
+            {
+                $table->string('key', 255);
+                $table->primary('key');
+                $table->integer('value');
+                $table->timestamps();
+            });
+            echo 'Database Sqlite created';
+        } catch (Exception $e) {
+            echo $e;
+        }
     }
 }

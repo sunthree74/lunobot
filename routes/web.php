@@ -23,7 +23,8 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 Route::resource('command', 'CommandController');
 
-Route::get('/tes', 'CommandController@tes')->name('tes');
+Route::get('/createSqlite', 'CommandController@createSqlite');
+Route::get('/volume', 'CommandController@getVolume')->name('tes');
 
 Route::post('webhook', 'CommandController@webhookUpdate')->name('webhook');
 

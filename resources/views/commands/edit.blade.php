@@ -42,6 +42,12 @@
                                 <b>@grouptitle@ : </b> for showing title of group (this is only work on group)
                               </li>
                               <li>
+                                <b>@date@ : </b> for showing complete date ex: 'Thursday, 19 December 2019  01:27:49'
+                              </li>
+                            </ul>
+                            <strong>You can use the word template below to show dynamic data <b>Only for /tradingprice command</b> :</strong>
+                            <ul>
+                              <li>
                                 <b>@bitcoinprice@ : </b> for showing actual Bitcoin price
                               </li>
                               <li>
@@ -60,7 +66,10 @@
                                 <b>@ethereumlow@ : </b> for showing lowest Ethereum price in 24 hour
                               </li>
                               <li>
-                                <b>@date@ : </b> for showing complete date ex: 'Thursday, 19 December 2019  01:27:49'
+                                <b>@volumebtc@ : </b> for showing Bitcoin volume
+                              </li>
+                              <li>
+                                <b>@volumeeth@ : </b> for showing Ethereum volume
                               </li>
                             </ul>
                           </p>
@@ -88,14 +97,14 @@
                           @else
                             <div class="form-group col-6">
                               <label for="exampleInputEmail1">Link</label>
-                              <input type="text" name="link[]" class="form-control" placeholder="Masukkan Link">
+                              <input type="text" name="link[]" class="form-control" placeholder="Input Link">
                               <p class="help-block">
                                 <strong>The url must start with "http://" or "https://"</strong>
                               </p>
                             </div>
                             <div class="form-group col-3">
                               <label for="exampleInputEmail1">Link Title</label>
-                              <input type="text" name="link_title[]" class="form-control" placeholder="Masukkan Judul Link">
+                              <input type="text" name="link_title[]" class="form-control" placeholder="Input Title Link">
                             </div>
                           @endif
                           <div class="form-group col-12">

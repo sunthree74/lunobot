@@ -41,6 +41,12 @@
                                 <b>@grouptitle@ : </b> for showing title of group (this is only work on group)
                               </li>
                               <li>
+                                <b>@date@ : </b> for showing complete date ex: 'Thursday, 19 December 2019  01:27:49'
+                              </li>
+                            </ul>
+                            <strong>You can use the word template below to show dynamic data <b>Only for /tradingprice command</b> :</strong>
+                            <ul>
+                              <li>
                                 <b>@bitcoinprice@ : </b> for showing actual Bitcoin price
                               </li>
                               <li>
@@ -59,7 +65,10 @@
                                 <b>@ethereumlow@ : </b> for showing lowest Ethereum price in 24 hour
                               </li>
                               <li>
-                                <b>@date@ : </b> for showing complete date ex: 'Thursday, 19 December 2019  01:27:49'
+                                <b>@volumebtc@ : </b> for showing Bitcoin volume
+                              </li>
+                              <li>
+                                <b>@volumeeth@ : </b> for showing Ethereum volume
                               </li>
                             </ul>
                           </p>
@@ -121,13 +130,6 @@
     removeFormatAttributes : true,
   });
     jQuery(document).ready(function () {
-        // $('#message').summernote({
-        //   toolbar: [
-        //     ['style', ['bold', 'italic', 'clear']],
-        //     ['insert', ['link']],
-        //   ],
-        //   enterHtml: '<br>'
-        // });
         $('#add').click(function () {
           var a =   '<div class="form-group col-6">'+
                     '<label for="exampleInputEmail1">Link</label>'+

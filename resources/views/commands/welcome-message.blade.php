@@ -27,24 +27,6 @@
                                 <b>@grouptitle@ : </b> for showing title of group (this is only work on group)
                               </li>
                               <li>
-                                <b>@bitcoinprice@ : </b> for showing actual Bitcoin price
-                              </li>
-                              <li>
-                                <b>@bitcoinhigh@ : </b> for showing highest Bitcoin price in 24 hour
-                              </li>
-                              <li>
-                                <b>@bitcoinlow@ : </b> for showing lowest Bitcoin price in 24 hour
-                              </li>
-                              <li>
-                                <b>@ethereumprice@ : </b> for showing actual Ethereum price
-                              </li>
-                              <li>
-                                <b>@ethereumhigh@ : </b> for showing highest Ethereum price in 24 hour
-                              </li>
-                              <li>
-                                <b>@ethereumlow@ : </b> for showing lowest Ethereum price in 24 hour
-                              </li>
-                              <li>
                                 <b>@date@ : </b> for showing complete date ex: 'Thursday, 19 December 2019  01:27:49'
                               </li>
                             </ul>
@@ -54,7 +36,7 @@
                           @foreach (\json_decode($cmd->links) as $item)
                             <div class="form-group col-6 link{{$loop->index}}">
                               <label for="exampleInputEmail1">Link</label>
-                              <input type="text" name="link[]" class="form-control" placeholder="Masukkan Link" value="{{$item}}">
+                              <input type="text" name="link[]" class="form-control" placeholder="Input Link" value="{{$item}}">
                               <p class="help-block">
                                 <strong>The url must start with "http://" or "https://"</strong>
                               </p>
@@ -64,7 +46,7 @@
                             @endphp
                             <div class="form-group col-3 link{{$loop->index}}">
                               <label for="exampleInputEmail1">Link Title</label>
-                              <input type="text" name="link_title[]" class="form-control" placeholder="Masukkan Judul Link" value="{{$title[$loop->index]}}">
+                              <input type="text" name="link_title[]" class="form-control" placeholder="Input Link Title" value="{{$title[$loop->index]}}">
                             </div>
                             <div class="form-group col-3 link{{$loop->index}}">
                               <button type="button" id="remove" onclick="remove('link{{$loop->index}}');" class="btn btn-danger">Remove Link</button>
@@ -73,14 +55,14 @@
                           @else
                             <div class="form-group col-6">
                               <label for="exampleInputEmail1">Link</label>
-                              <input type="text" name="link[]" class="form-control" placeholder="Masukkan Link">
+                              <input type="text" name="link[]" class="form-control" placeholder="Input Link">
                               <p class="help-block">
                                 <strong>The url must start with "http://" or "https://"</strong>
                               </p>
                             </div>
                             <div class="form-group col-3">
                               <label for="exampleInputEmail1">Link Title</label>
-                              <input type="text" name="link_title[]" class="form-control" placeholder="Masukkan Judul Link">
+                              <input type="text" name="link_title[]" class="form-control" placeholder="Input Link Title">
                             </div>
                           @endif
                         <div class="form-group col-3">
