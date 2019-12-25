@@ -24,7 +24,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::resource('command', 'CommandController');
 
 Route::get('/createSqlite', 'CommandController@createSqlite');
-Route::get('/volume', 'CommandController@getVolume')->name('tes');
+Route::get('/truncateSqlite', 'CommandController@truncateSqlite');
 
 Route::post('webhook', 'CommandController@webhookUpdate')->name('webhook');
 

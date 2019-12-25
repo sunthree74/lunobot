@@ -257,7 +257,7 @@ class CommandController extends Controller
                 } elseif (isset($m["message"]["new_chat_member"])) {
                     $this->iduser = $m["message"]["from"]["id"];
                     $this->idchat = $m["message"]["chat"]["id"];
-                    $this->userData($m["message"]["chat"]["id"],$m["message"]["new_chat_member"]["first_name"],$m["message"]["chat"]["title"]);
+                    $this->userData($this->idchat,$m["message"]["new_chat_member"]["first_name"],$m["message"]["chat"]["title"]);
                     
                     return $this->captcha($m);
                 }
@@ -420,7 +420,7 @@ class CommandController extends Controller
             if ($time > 60) {
                 Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
                 $this->removeMessage($this->idchat,$messageid);
-                $this->kickMember($id);
+                // $this->kickMember($id);
                 $this->deleteSession('messageid'.$this->iduser);
                 $this->deleteSession('time'.$this->iduser);
                 $this->deleteSession('iduser'.$this->iduser);
@@ -451,35 +451,44 @@ class CommandController extends Controller
                 }
             }
 		}else{
-            Log::info('iduser-'.$this->iduser.'{New Members '.date('d-M-Y H:i:s').'}');
-            $this->insertSession('iduser'.$this->iduser, $this->iduser);
+            $idbot = env('TELEGRAM_BOT_TOKEN', 'NULL');
+            $idbot = explode(":", $idbot);
+            $idbot = $idbot[0];
+            $i = $m["message"]["new_chat_member"]["id"];
+            if ($i != $idbot) {
+                Log::info('iduser-'.$this->iduser.'{New Members '.date('d-M-Y H:i:s').'}');
+                $this->insertSession('iduser'.$this->iduser, $this->iduser);
+                
+                $randomNum1 = \rand(0,9);
+                $randomNum2 = \rand(0,9);
+                $this->hasilCaptcha = $randomNum1 + $randomNum2;
+                
+                $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
+                $txt = "Hi $this->fname, To verify that you are a human, then you must answer this mathematical operation in 60 seconds. \n";
+                $txt .= " $randomNum1 + $randomNum2 = ? \n ";
+                $txt .= " If you don't answer then you will be kicked";
+                $response = Telegram::sendMessage([
+                    'chat_id' => $this->idchat, 
+                    'text' => $txt
+                ]);
+                $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
+                $this->insertSession('time'.$this->iduser, time());
+            }
             
-            $randomNum1 = \rand(0,9);
-            $randomNum2 = \rand(0,9);
-            $this->hasilCaptcha = $randomNum1 + $randomNum2;
-            
-            $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
-            $txt = "Hi $this->fname, To verify that you are a human, then you must answer this mathematical operation in 60 seconds. \n";
-            $txt .= " $randomNum1 + $randomNum2 = ? \n ";
-            $txt .= " If you don't answer then you will be kicked";
-            $response = Telegram::sendMessage([
-                'chat_id' => $this->idchat, 
-                'text' => $txt
-            ]);
-            $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
-            $this->insertSession('time'.$this->iduser, time());
             return NULL;
 		}
     }
 
     public function removeMessage($idchat, $idmessage)
     {
-        $response = $this->clientBot->request('GET', 'deleteMessage', [
-            'query' => [
-                'chat_id' => $idchat,
-                'message_id' => $idmessage,
-            ]
-        ]);
+        if (isset($idmessage) && $idmessage != 0) {
+            $response = $this->clientBot->request('GET', 'deleteMessage', [
+                'query' => [
+                    'chat_id' => $idchat,
+                    'message_id' => $idmessage,
+                ]
+            ]);
+        }
     }
 
     /**
@@ -584,6 +593,16 @@ class CommandController extends Controller
                 $table->timestamps();
             });
             echo 'Database Sqlite created';
+        } catch (Exception $e) {
+            echo $e;
+        }
+    }
+
+    public function truncateSqlite()
+    {
+        try {
+            Schema::connection('sqlite')->table('session')->truncate();
+            echo 'Database Sqlite truncated';
         } catch (Exception $e) {
             echo $e;
         }
