@@ -432,6 +432,17 @@ class CommandController extends Controller
                     $sumber = $m["message"];
                     $cmd = $sumber["text"];
                     if ($cmd != $captcha) {
+                        if ($this->countAmount($this->iduser)) {
+                            $this->removeMessage($this->idchat,$messageid);
+                            $this->kickMember($id);
+                            $this->deleteSession('messageid'.$this->iduser);
+                            $this->deleteSession('time'.$this->iduser);
+                            $this->deleteSession('iduser'.$this->iduser);
+                            $this->deleteSession('captcha'.$this->iduser);
+                            $this->deleteAmount($this->iduser);
+                            return NULL;
+                        }
+                        $this->insertAmount($this->iduser, '1');
                         $this->deleteSession('captcha'.$this->iduser);
                         $randomNum1 = \rand(0,9);
                         $randomNum2 = \rand(0,9);
@@ -439,8 +450,8 @@ class CommandController extends Controller
                         
                         $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
                         $txt = "Hi $this->fname, Your answer is wrong please try another number \n";
-                        $txt .= " $randomNum1 + $randomNum2 = ? \n ";
-                        $txt .= " If you don't answer then you will be kicked after 60 seconds.";
+                        $txt .= "$randomNum1 + $randomNum2 = ? \n ";
+                        $txt .= "If you don't answer then you will be kicked after 60 seconds.";
                         $response = Telegram::sendMessage([
                             'chat_id' => $this->idchat, 
                             'text' => $txt
@@ -454,6 +465,7 @@ class CommandController extends Controller
                         $this->deleteSession('time'.$this->iduser);
                         $this->deleteSession('iduser'.$this->iduser);
                         $this->deleteSession('captcha'.$this->iduser);
+                        $this->deleteAmount($this->iduser);
                         return '@welcome';
                     }
                 }
@@ -473,8 +485,8 @@ class CommandController extends Controller
                 
                 $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
                 $txt = "Hi $this->fname, To verify that you are a human, then you must answer this mathematical operation in 60 seconds. \n";
-                $txt .= " $randomNum1 + $randomNum2 = ? \n ";
-                $txt .= " If you don't answer then you will be kicked after 60 seconds.";
+                $txt .= "$randomNum1 + $randomNum2 = ? \n ";
+                $txt .= "If you don't answer then you will be kicked after 60 seconds.";
                 $response = Telegram::sendMessage([
                     'chat_id' => $this->idchat, 
                     'text' => $txt
@@ -557,7 +569,22 @@ class CommandController extends Controller
             ]);
             return true;
         } catch (Exception $e) {
-            Log::warning("{key : $key and value : $val can't check .error message($e) ".date('d-M-Y H:i:s')."}");
+            Log::warning("{key : $key and value : $val can't insert session .error message($e) ".date('d-M-Y H:i:s')."}");
+            return false;
+        }
+        
+    }
+
+    public function insertAmount($key, $val)
+    {
+        try {
+            DB::connection('sqlite')->table('answer_amount')->insert([
+                'key' => $key,
+                'value' => $val
+            ]);
+            return true;
+        } catch (Exception $e) {
+            Log::warning("{key : $key and value : $val can't insert amount .error message($e) ".date('d-M-Y H:i:s')."}");
             return false;
         }
         
@@ -579,6 +606,23 @@ class CommandController extends Controller
         }
     }
 
+    public function countAmount($key)
+    {
+        try {
+            $v = DB::connection('sqlite')->table('answer_amount')->where('key', $key)->first();
+            if ($v) {
+                if ($v->count() == 2) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } catch (Exception $e) {
+            Log::warning("{key : $key can't count amount. error message($e) ".date('d-M-Y H:i:s')."}");
+            return false;
+        }
+    }
+
     public function deleteSession($key)
     {
         try {
@@ -590,6 +634,17 @@ class CommandController extends Controller
         }
     }
 
+    public function deleteAmount($key)
+    {
+        try {
+            DB::connection('sqlite')->table('answer_amount')->where('key', $key)->delete();
+            return true;
+        } catch (Exception $e) {
+            Log::warning("{key : $key can't delete amount. error message($e) ".date('d-M-Y H:i:s')."}");
+            return false;
+        }
+    }
+
     public function createSqlite()
     {
         try {
@@ -597,6 +652,14 @@ class CommandController extends Controller
             {
                 $table->string('key', 255);
                 $table->primary('key');
+                $table->integer('value');
+                $table->timestamps();
+            });
+
+            Schema::connection('sqlite')->create('answer_amount', function($table)
+            {
+                $table->bigIncrements('id');
+                $table->string('key', 255);
                 $table->integer('value');
                 $table->timestamps();
             });
