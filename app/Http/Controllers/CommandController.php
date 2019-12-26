@@ -432,10 +432,18 @@ class CommandController extends Controller
                     $sumber = $m["message"];
                     $cmd = $sumber["text"];
                     if ($cmd != $captcha) {
+                        $this->deleteSession('captcha'.$this->iduser);
+                        $randomNum1 = \rand(0,9);
+                        $randomNum2 = \rand(0,9);
+                        $this->hasilCaptcha = $randomNum1 + $randomNum2;
+                        
+                        $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
+                        $txt = "Hi $this->fname, Your answer is wrong please try another number \n";
+                        $txt .= " $randomNum1 + $randomNum2 = ? \n ";
+                        $txt .= " If you don't answer then you will be kicked after 60 seconds.";
                         $response = Telegram::sendMessage([
                             'chat_id' => $this->idchat, 
-                            'text' => 'Your answer is wrong',
-                            'reply_to_message_id' => $this->messageId
+                            'text' => $txt
                         ]);
                         $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
                         $this->removeMessage($this->idchat,$messageid);
@@ -466,7 +474,7 @@ class CommandController extends Controller
                 $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
                 $txt = "Hi $this->fname, To verify that you are a human, then you must answer this mathematical operation in 60 seconds. \n";
                 $txt .= " $randomNum1 + $randomNum2 = ? \n ";
-                $txt .= " If you don't answer then you will be kicked";
+                $txt .= " If you don't answer then you will be kicked after 60 seconds.";
                 $response = Telegram::sendMessage([
                     'chat_id' => $this->idchat, 
                     'text' => $txt
