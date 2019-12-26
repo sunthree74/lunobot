@@ -420,7 +420,7 @@ class CommandController extends Controller
             if ($time > 60) {
                 Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
                 $this->removeMessage($this->idchat,$messageid);
-                // $this->kickMember($id);
+                $this->kickMember($id);
                 $this->deleteSession('messageid'.$this->iduser);
                 $this->deleteSession('time'.$this->iduser);
                 $this->deleteSession('iduser'.$this->iduser);
