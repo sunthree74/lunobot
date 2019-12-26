@@ -237,12 +237,12 @@ class CommandController extends Controller
                     $this->idchat = $m["message"]["chat"]["id"];
                     $this->messageId = $sumber["message_id"];
                     $this->userData($sumber["chat"]["id"],$sumber["from"]["first_name"]);
-                    Log::info('iduser-'.$this->iduser.'{Process Message Before Session Check '.date('d-M-Y H:i:s').'}');
+                    // Log::info('iduser-'.$this->iduser.'{Process Message Before Session Check '.date('d-M-Y H:i:s').'}');
                     if($this->findSession('iduser'.$this->iduser)){
-                        Log::info('iduser-'.$this->iduser.'{Session has checked and return captcha function '.date('d-M-Y H:i:s').'}');
+                        // Log::info('iduser-'.$this->iduser.'{Session has checked and return captcha function '.date('d-M-Y H:i:s').'}');
                         return $this->captcha($m);
                     } else {
-                        Log::info('iduser-'.$this->iduser.'{Session has checked and return false '.date('d-M-Y H:i:s').'}');
+                        // Log::info('iduser-'.$this->iduser.'{Session has checked and return false '.date('d-M-Y H:i:s').'}');
                         if (isset($m["message"]["entities"])) {
                             if ( $m["message"]["entities"][0]["type"] == "bot_command") {
                                 if (strpos($cmd, env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME')) !== false) {
@@ -418,16 +418,16 @@ class CommandController extends Controller
             $messageid = $this->findSession('messageid'.$this->iduser);
             $this->deleteSession('messageid'.$this->iduser);
             if ($time > 60) {
-                Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
+                // Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
                 $this->removeMessage($this->idchat,$messageid);
                 $this->kickMember($id);
                 $this->deleteSession('messageid'.$this->iduser);
                 $this->deleteSession('time'.$this->iduser);
                 $this->deleteSession('iduser'.$this->iduser);
                 $this->deleteSession('captcha'.$this->iduser);
-                return 'you have been kicked';
+                return NULL;
             } else {
-                Log::info('iduser-'.$this->iduser.'{Answering Captcha '.date('d-M-Y H:i:s').'}');
+                // Log::info('iduser-'.$this->iduser.'{Answering Captcha '.date('d-M-Y H:i:s').'}');
                 if (isset($m["message"]["text"])) {
                     $sumber = $m["message"];
                     $cmd = $sumber["text"];
@@ -456,7 +456,7 @@ class CommandController extends Controller
             $idbot = $idbot[0];
             $i = $m["message"]["new_chat_member"]["id"];
             if ($i != $idbot) {
-                Log::info('iduser-'.$this->iduser.'{New Members '.date('d-M-Y H:i:s').'}');
+                // Log::info('iduser-'.$this->iduser.'{New Members '.date('d-M-Y H:i:s').'}');
                 $this->insertSession('iduser'.$this->iduser, $this->iduser);
                 
                 $randomNum1 = \rand(0,9);
