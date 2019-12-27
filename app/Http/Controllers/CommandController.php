@@ -304,14 +304,18 @@ class CommandController extends Controller
 
     public function kickMember($iduser)
     {
-        $this->setEndpoint();
-        $this->client->request('POST', 'kickChatMember', [
-            'query' => [
-                'chat_id' => $this->idchat,
-                'user_id' => $iduser,
-                'until_date' => time() + (15* 60)
-            ]
-        ]);
+        try {
+            $this->setEndpoint();
+            $this->client->request('POST', 'kickChatMember', [
+                'query' => [
+                    'chat_id' => $this->idchat,
+                    'user_id' => $iduser,
+                    'until_date' => time() + (15* 60)
+                ]
+            ]);
+        } catch (Exception $e) {
+            echo($e);
+        }
     }
 
     public function getPrice($crpt='XBT', $cur='MYR')
@@ -515,12 +519,17 @@ class CommandController extends Controller
     public function removeMessage($idchat, $idmessage)
     {
         if (isset($idmessage) && $idmessage != 0) {
-            $response = $this->clientBot->request('GET', 'deleteMessage', [
-                'query' => [
-                    'chat_id' => $idchat,
-                    'message_id' => $idmessage,
-                ]
-            ]);
+            try {
+                $response = $this->clientBot->request('GET', 'deleteMessage', [
+                    'query' => [
+                        'chat_id' => $idchat,
+                        'message_id' => $idmessage,
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo($e);
+            }
+            
         }
     }
 
