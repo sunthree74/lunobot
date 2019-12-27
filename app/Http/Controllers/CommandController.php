@@ -420,11 +420,13 @@ class CommandController extends Controller
             if ($time > 60) {
                 // Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
                 $this->removeMessage($this->idchat,$messageid);
+                $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
                 $this->kickMember($id);
                 $this->deleteSession('messageid'.$this->iduser);
                 $this->deleteSession('time'.$this->iduser);
                 $this->deleteSession('iduser'.$this->iduser);
                 $this->deleteSession('captcha'.$this->iduser);
+                $this->deleteSession('usermessage'.$this->iduser);
                 return NULL;
             } else {
                 // Log::info('iduser-'.$this->iduser.'{Answering Captcha '.date('d-M-Y H:i:s').'}');
@@ -434,11 +436,13 @@ class CommandController extends Controller
                     if ($cmd != $captcha) {
                         if ($this->countAmount($this->iduser)) {
                             $this->removeMessage($this->idchat,$messageid);
+                            $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
                             $this->kickMember($id);
                             $this->deleteSession('messageid'.$this->iduser);
                             $this->deleteSession('time'.$this->iduser);
                             $this->deleteSession('iduser'.$this->iduser);
                             $this->deleteSession('captcha'.$this->iduser);
+                            $this->deleteSession('usermessage'.$this->iduser);
                             $this->deleteAmount($this->iduser);
                             return NULL;
                         }
@@ -456,15 +460,24 @@ class CommandController extends Controller
                             'chat_id' => $this->idchat, 
                             'text' => $txt
                         ]);
+                        if ($this->findSession('usermessage'.$this->iduser)) {
+                            $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
+                            $this->deleteSession('usermessage'.$this->iduser);
+                            $this->insertSession('usermessage'.$this->iduser, $m["message"]["message_id"]);
+                        } else {
+                            $this->insertSession('usermessage'.$this->iduser, $m["message"]["message_id"]);
+                        }
                         $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
                         $this->removeMessage($this->idchat,$messageid);
                         return NULL;
                     }else {
                         $this->removeMessage($this->idchat,$messageid);
+                        $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
                         $this->deleteSession('messageid'.$this->iduser);
                         $this->deleteSession('time'.$this->iduser);
                         $this->deleteSession('iduser'.$this->iduser);
                         $this->deleteSession('captcha'.$this->iduser);
+                        $this->deleteSession('usermessage'.$this->iduser);
                         $this->deleteAmount($this->iduser);
                         return '@welcome';
                     }
@@ -609,7 +622,7 @@ class CommandController extends Controller
     public function countAmount($key)
     {
         try {
-            $v = DB::connection('sqlite')->table('answer_amount')->where('key', $key)->first();
+            $v = DB::connection('sqlite')->table('answer_amount')->where('key', $key)->get();
             if ($v) {
                 if ($v->count() == 2) {
                     return true;
