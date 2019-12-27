@@ -685,7 +685,8 @@ class CommandController extends Controller
     public function truncateSqlite()
     {
         try {
-            Schema::connection('sqlite')->table('session')->truncate();
+            DB::connection('sqlite')->table('session')->truncate();
+            DB::connection('sqlite')->table('answer_amount')->truncate();
             echo 'Database Sqlite truncated';
         } catch (Exception $e) {
             echo $e;
