@@ -304,17 +304,19 @@ class CommandController extends Controller
 
     public function kickMember($iduser)
     {
-        try {
-            $this->setEndpoint();
-            $this->client->request('POST', 'kickChatMember', [
-                'query' => [
-                    'chat_id' => $this->idchat,
-                    'user_id' => $iduser,
-                    'until_date' => time() + (15* 60)
-                ]
-            ]);
-        } catch (Exception $e) {
-            echo($e);
+        if ($this->checkAdmin != true) {
+            try {
+                $this->setEndpoint();
+                $this->client->request('POST', 'kickChatMember', [
+                    'query' => [
+                        'chat_id' => $this->idchat,
+                        'user_id' => $iduser,
+                        'until_date' => time() + (15* 60)
+                    ]
+                ]);
+            } catch (Exception $e) {
+                echo($e);
+            }
         }
     }
 
@@ -699,6 +701,28 @@ class CommandController extends Controller
             echo 'Database Sqlite truncated';
         } catch (Exception $e) {
             echo $e;
+        }
+    }
+
+    public function checkAdmin($iduser)
+    {
+        $client = new Client();
+        $response = $client->request('GET', 'https://api.telegram.org/bot'.env('TELEGRAM_BOT_TOKEN', 'YOUR-BOT-TOKEN').'/getChatAdministrators', [
+            'query' => [
+                'chat_id' => $this->idchat
+            ]
+        ]);
+
+        if ($response->getStatusCode() == 200) {
+            $body = (string) $response->getBody()->getContents();
+            $data =  json_decode($body, true);
+            $a = $data["result"];
+            foreach ($a as $value) {
+                if ($iduser == $value["user"]["id"]) {
+                    return true;
+                    break;
+                }
+            }
         }
     }
 }
