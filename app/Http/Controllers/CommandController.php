@@ -529,7 +529,7 @@ class CommandController extends Controller
                     ]
                 ]);
             } catch (Exception $e) {
-                echo($e);
+                Log::warning("{can't delete message .error message($e) ".date('d-M-Y H:i:s')."}");
             }
             
         }
