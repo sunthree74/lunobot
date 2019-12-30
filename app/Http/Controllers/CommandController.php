@@ -426,7 +426,7 @@ class CommandController extends Controller
             if ($time > 60) {
                 // Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
                 $this->removeMessage($this->idchat,$messageid);
-                $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
+                // $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
                 $this->kickMember($id);
                 $this->deleteSession('messageid'.$this->iduser);
                 $this->deleteSession('time'.$this->iduser);
@@ -442,7 +442,7 @@ class CommandController extends Controller
                     if ($cmd != $captcha) {
                         if ($this->countAmount($this->iduser)) {
                             $this->removeMessage($this->idchat,$messageid);
-                            $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
+                            // $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
                             $this->kickMember($id);
                             $this->deleteSession('messageid'.$this->iduser);
                             $this->deleteSession('time'.$this->iduser);
