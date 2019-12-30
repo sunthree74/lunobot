@@ -442,7 +442,7 @@ class CommandController extends Controller
                     if ($cmd != $captcha) {
                         if ($this->countAmount($this->iduser)) {
                             $this->removeMessage($this->idchat,$messageid);
-                            $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
+                            // $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
                             $this->kickMember($id);
                             $this->deleteSession('messageid'.$this->iduser);
                             $this->deleteSession('time'.$this->iduser);
