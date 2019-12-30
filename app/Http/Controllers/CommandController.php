@@ -304,7 +304,7 @@ class CommandController extends Controller
 
     public function kickMember($iduser)
     {
-        if ($this->checkAdmin != true) {
+        if ($this->checkAdmin($iduser) != true) {
             try {
                 $this->setEndpoint();
                 $this->client->request('POST', 'kickChatMember', [
