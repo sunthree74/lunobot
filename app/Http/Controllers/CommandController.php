@@ -235,14 +235,7 @@ class CommandController extends Controller
                     $cmd = $sumber["text"];
                     $this->iduser = $m["message"]["from"]["id"];
                     $this->idchat = $m["message"]["chat"]["id"];
-                    $this->messageId = $sumber["message_id"];
                     $this->userData($sumber["chat"]["id"],$sumber["from"]["first_name"]);
-                    // Log::info('iduser-'.$this->iduser.'{Process Message Before Session Check '.date('d-M-Y H:i:s').'}');
-                    if($this->findSession('iduser'.$this->iduser)){
-                        // Log::info('iduser-'.$this->iduser.'{Session has checked and return captcha function '.date('d-M-Y H:i:s').'}');
-                        return $this->captcha($m);
-                    } else {
-                        // Log::info('iduser-'.$this->iduser.'{Session has checked and return false '.date('d-M-Y H:i:s').'}');
                         if (isset($m["message"]["entities"])) {
                             if ( $m["message"]["entities"][0]["type"] == "bot_command") {
                                 if (strpos($cmd, env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME')) !== false) {
@@ -253,13 +246,8 @@ class CommandController extends Controller
                                 }
                             }
                         }
-                    }
                 } elseif (isset($m["message"]["new_chat_member"])) {
-                    $this->iduser = $m["message"]["from"]["id"];
-                    $this->idchat = $m["message"]["chat"]["id"];
-                    $this->userData($this->idchat,$m["message"]["new_chat_member"]["first_name"],$m["message"]["chat"]["title"]);
-                    
-                    return $this->captcha($m);
+                    return $this->botFilter($m);
                 }
         
     }
@@ -304,7 +292,6 @@ class CommandController extends Controller
 
     public function kickMember($iduser)
     {
-        if ($this->checkAdmin($iduser) != true) {
             try {
                 $this->setEndpoint();
                 $this->client->request('POST', 'kickChatMember', [
@@ -317,7 +304,6 @@ class CommandController extends Controller
             } catch (Exception $e) {
                 echo($e);
             }
-        }
     }
 
     public function getPrice($crpt='XBT', $cur='MYR')
@@ -518,23 +504,6 @@ class CommandController extends Controller
 		}
     }
 
-    public function removeMessage($idchat, $idmessage)
-    {
-        if (isset($idmessage) && $idmessage != 0) {
-            try {
-                $response = $this->clientBot->request('GET', 'deleteMessage', [
-                    'query' => [
-                        'chat_id' => $idchat,
-                        'message_id' => $idmessage,
-                    ]
-                ]);
-            } catch (Exception $e) {
-                Log::warning("{can't delete message .error message($e) ".date('d-M-Y H:i:s')."}");
-            }
-            
-        }
-    }
-
     /**
      * Show the form for editing the specified resource.
      *
@@ -584,109 +553,17 @@ class CommandController extends Controller
         }
     }
 
-    public function insertSession($key, $val)
-    {
-        try {
-            DB::connection('sqlite')->table('session')->insert([
-                'key' => $key,
-                'value' => $val
-            ]);
-            return true;
-        } catch (Exception $e) {
-            Log::warning("{key : $key and value : $val can't insert session .error message($e) ".date('d-M-Y H:i:s')."}");
-            return false;
-        }
-        
-    }
-
-    public function insertAmount($key, $val)
-    {
-        try {
-            DB::connection('sqlite')->table('answer_amount')->insert([
-                'key' => $key,
-                'value' => $val
-            ]);
-            return true;
-        } catch (Exception $e) {
-            Log::warning("{key : $key and value : $val can't insert amount .error message($e) ".date('d-M-Y H:i:s')."}");
-            return false;
-        }
-        
-    }
-
-    public function findSession($key)
-    {
-        try {
-            $v = DB::connection('sqlite')->table('session')->where('key', $key)->select('value')->first();
-            if ($v) {
-                return $v->value;
-            } else {
-                return false;
-            }
-            
-        } catch (Exception $e) {
-            Log::warning("{key : $key can't check error message($e) ".date('d-M-Y H:i:s')."}");
-            return false;
-        }
-    }
-
-    public function countAmount($key)
-    {
-        try {
-            $v = DB::connection('sqlite')->table('answer_amount')->where('key', $key)->get();
-            if ($v) {
-                if ($v->count() == 2) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        } catch (Exception $e) {
-            Log::warning("{key : $key can't count amount. error message($e) ".date('d-M-Y H:i:s')."}");
-            return false;
-        }
-    }
-
-    public function deleteSession($key)
-    {
-        try {
-            DB::connection('sqlite')->table('session')->where('key', $key)->delete();
-            return true;
-        } catch (Exception $e) {
-            Log::warning("{key : $key can't delete error message($e) ".date('d-M-Y H:i:s')."}");
-            return false;
-        }
-    }
-
-    public function deleteAmount($key)
-    {
-        try {
-            DB::connection('sqlite')->table('answer_amount')->where('key', $key)->delete();
-            return true;
-        } catch (Exception $e) {
-            Log::warning("{key : $key can't delete amount. error message($e) ".date('d-M-Y H:i:s')."}");
-            return false;
-        }
-    }
-
     public function createSqlite()
     {
         try {
-            Schema::connection('sqlite')->create('session', function($table)
+            Schema::connection('sqlite')->create('config', function($table)
             {
-                $table->string('key', 255);
-                $table->primary('key');
-                $table->integer('value');
+                $table->bigIncrements('id');
+                $table->string('name', 225);
+                $table->string('value', 225);
                 $table->timestamps();
             });
 
-            Schema::connection('sqlite')->create('answer_amount', function($table)
-            {
-                $table->bigIncrements('id');
-                $table->string('key', 255);
-                $table->integer('value');
-                $table->timestamps();
-            });
             echo 'Database Sqlite created';
         } catch (Exception $e) {
             echo $e;
@@ -696,32 +573,35 @@ class CommandController extends Controller
     public function truncateSqlite()
     {
         try {
-            DB::connection('sqlite')->table('session')->truncate();
-            DB::connection('sqlite')->table('answer_amount')->truncate();
+            DB::connection('sqlite')->table('config')->truncate();
             echo 'Database Sqlite truncated';
         } catch (Exception $e) {
             echo $e;
         }
     }
 
-    public function checkAdmin($iduser)
+    public function isFilter()
     {
-        $client = new Client();
-        $response = $client->request('GET', 'https://api.telegram.org/bot'.env('TELEGRAM_BOT_TOKEN', 'YOUR-BOT-TOKEN').'/getChatAdministrators', [
-            'query' => [
-                'chat_id' => $this->idchat
-            ]
-        ]);
+        try {
+            $v = DB::connection('sqlite')->table('config')->where('name', 'filter bot')->select('value')->first();
+            if ($v) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception $e) {
+            Log::warning("{can't check config message($e) ".date('d-M-Y H:i:s')."}");
+        }
+    }
 
-        if ($response->getStatusCode() == 200) {
-            $body = (string) $response->getBody()->getContents();
-            $data =  json_decode($body, true);
-            $a = $data["result"];
-            foreach ($a as $value) {
-                if ($iduser == $value["user"]["id"]) {
-                    return true;
-                    break;
-                }
+    public function botFilter($m)
+    {
+        if ($this->isFilter()) {
+            if ($m["message"]["new_chat_member"]["is_bot"] == true) {
+                $this->idchat = $m["message"]["chat"]["id"];
+                $this->kickMember($m["message"]["new_chat_member"]["id"]);
+            } else {
+                return '@welcome';
             }
         }
     }
