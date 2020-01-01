@@ -501,15 +501,21 @@ class CommandController extends Controller
 
     public function botFilter($m)
     {
-        if ($this->isFilter()) {
-            if ($m["message"]["new_chat_member"]["is_bot"] == true) {
-                $this->idchat = $m["message"]["chat"]["id"];
-                $this->kickMember($m["message"]["new_chat_member"]["id"]);
+        $idbot = env('TELEGRAM_BOT_TOKEN', 'NULL');
+        $idbot = explode(":", $idbot);
+        $idbot = $idbot[0];
+        $i = $m["message"]["new_chat_member"]["id"];
+        if ($i != $idbot) {
+            if ($this->isFilter()) {
+                if ($m["message"]["new_chat_member"]["is_bot"] == true) {
+                    $this->idchat = $m["message"]["chat"]["id"];
+                    $this->kickMember($m["message"]["new_chat_member"]["id"]);
+                } else {
+                    return '@welcome';
+                }
             } else {
                 return '@welcome';
             }
-        } else {
-            return '@welcome';
         }
     }
 }
