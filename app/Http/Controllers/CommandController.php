@@ -166,16 +166,20 @@ class CommandController extends Controller
         return redirect()->back();
     }
 
-    public function tess($res = NULL)
+    public function tes()
     {
-        $response = Telegram::sendMessage([
-            'chat_id' => $this->idchat, 
-            'text' => '$res'
-          ]);
-          
-        $messageId = $response->getMessageId();
-
-        return $response;
+        try {
+            DB::connection('sqlite')
+                ->table('config')
+                ->insert([
+                'name' => 'filter bot',
+                'value' => 'true'
+            ]);
+            echo 'Sqlite inserted';
+        } catch (Exception $e) {
+            Log::warning("{key : $key and value : $val can't insert amount .error message($e) ".date('d-M-Y H:i:s')."}");
+            return false;
+        }
     }
 
     public function sendMessage($message, $btn = NULL)
@@ -247,6 +251,10 @@ class CommandController extends Controller
                             }
                         }
                 } elseif (isset($m["message"]["new_chat_member"])) {
+                    $this->idchat = $m["message"]["chat"]["id"];
+                    $this->iduser = $m["message"]["from"]["id"];
+                    $sumber = $m["message"];
+                    $this->userData($sumber["chat"]["id"],$sumber["new_chat_member"]["first_name"], $sumber["chat"]["title"]);
                     return $this->botFilter($m);
                 }
         
@@ -401,109 +409,6 @@ class CommandController extends Controller
         $this->titleGroup = $titleGroup;
     }
 
-    public function captcha($m)
-    {
-        if($this->findSession('iduser'.$this->iduser)){
-            $id = $this->findSession('iduser'.$this->iduser);
-            $captcha = $this->findSession('captcha'.$this->iduser);
-            $time = time() - $this->findSession('time'.$this->iduser);
-            $messageid = $this->findSession('messageid'.$this->iduser);
-            // $this->deleteSession('messageid'.$this->iduser);
-            if ($time > 60) {
-                // Log::info('iduser-'.$this->iduser.'{Removing Member '.date('d-M-Y H:i:s').'}');
-                $this->removeMessage($this->idchat,$messageid);
-                // $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
-                $this->kickMember($id);
-                $this->deleteSession('messageid'.$this->iduser);
-                $this->deleteSession('time'.$this->iduser);
-                $this->deleteSession('iduser'.$this->iduser);
-                $this->deleteSession('captcha'.$this->iduser);
-                $this->deleteSession('usermessage'.$this->iduser);
-                return NULL;
-            } else {
-                // Log::info('iduser-'.$this->iduser.'{Answering Captcha '.date('d-M-Y H:i:s').'}');
-                if (isset($m["message"]["text"])) {
-                    $sumber = $m["message"];
-                    $cmd = $sumber["text"];
-                    if ($cmd != $captcha) {
-                        if ($this->countAmount($this->iduser)) {
-                            $this->removeMessage($this->idchat,$messageid);
-                            // $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
-                            $this->kickMember($id);
-                            $this->deleteSession('messageid'.$this->iduser);
-                            $this->deleteSession('time'.$this->iduser);
-                            $this->deleteSession('iduser'.$this->iduser);
-                            $this->deleteSession('captcha'.$this->iduser);
-                            $this->deleteSession('usermessage'.$this->iduser);
-                            $this->deleteAmount($this->iduser);
-                            return NULL;
-                        }
-                        $this->insertAmount($this->iduser, '1');
-                        $this->deleteSession('captcha'.$this->iduser);
-                        $randomNum1 = \rand(0,9);
-                        $randomNum2 = \rand(0,9);
-                        $this->hasilCaptcha = $randomNum1 + $randomNum2;
-                        
-                        $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
-                        $txt = "Hi $this->fname, Your answer is wrong please try another number \n";
-                        $txt .= "$randomNum1 + $randomNum2 = ? \n ";
-                        $txt .= "If you don't answer then you will be kicked after 60 seconds.";
-                        $response = Telegram::sendMessage([
-                            'chat_id' => $this->idchat, 
-                            'text' => $txt
-                        ]);
-                        if ($this->findSession('usermessage'.$this->iduser)) {
-                            $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
-                            $this->deleteSession('usermessage'.$this->iduser);
-                            $this->insertSession('usermessage'.$this->iduser, $m["message"]["message_id"]);
-                        } else {
-                            $this->insertSession('usermessage'.$this->iduser, $m["message"]["message_id"]);
-                        }
-                        $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
-                        $this->removeMessage($this->idchat,$messageid);
-                        return NULL;
-                    }else {
-                        $this->removeMessage($this->idchat,$messageid);
-                        $this->removeMessage($this->idchat,$this->findSession('usermessage'.$this->iduser));
-                        $this->deleteSession('messageid'.$this->iduser);
-                        $this->deleteSession('time'.$this->iduser);
-                        $this->deleteSession('iduser'.$this->iduser);
-                        $this->deleteSession('captcha'.$this->iduser);
-                        $this->deleteSession('usermessage'.$this->iduser);
-                        $this->deleteAmount($this->iduser);
-                        return '@welcome';
-                    }
-                }
-            }
-		}else{
-            $idbot = env('TELEGRAM_BOT_TOKEN', 'NULL');
-            $idbot = explode(":", $idbot);
-            $idbot = $idbot[0];
-            $i = $m["message"]["new_chat_member"]["id"];
-            if ($i != $idbot) {
-                // Log::info('iduser-'.$this->iduser.'{New Members '.date('d-M-Y H:i:s').'}');
-                $this->insertSession('iduser'.$this->iduser, $this->iduser);
-                
-                $randomNum1 = \rand(0,9);
-                $randomNum2 = \rand(0,9);
-                $this->hasilCaptcha = $randomNum1 + $randomNum2;
-                
-                $this->insertSession('captcha'.$this->iduser, $this->hasilCaptcha);
-                $txt = "Hi $this->fname, To verify that you are a human, then you must answer this mathematical operation in 60 seconds. \n";
-                $txt .= "$randomNum1 + $randomNum2 = ? \n ";
-                $txt .= "If you don't answer then you will be kicked after 60 seconds.";
-                $response = Telegram::sendMessage([
-                    'chat_id' => $this->idchat, 
-                    'text' => $txt
-                ]);
-                $this->insertSession('messageid'.$this->iduser, $response->getMessageId());
-                $this->insertSession('time'.$this->iduser, time());
-            }
-            
-            return NULL;
-		}
-    }
-
     /**
      * Show the form for editing the specified resource.
      *
@@ -584,7 +489,7 @@ class CommandController extends Controller
     {
         try {
             $v = DB::connection('sqlite')->table('config')->where('name', 'filter bot')->select('value')->first();
-            if ($v) {
+            if ($v->value == 'true') {
                 return true;
             } else {
                 return false;
@@ -603,6 +508,8 @@ class CommandController extends Controller
             } else {
                 return '@welcome';
             }
+        } else {
+            return '@welcome';
         }
     }
 }

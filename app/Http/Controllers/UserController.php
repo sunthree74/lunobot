@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\User;
 use Alert;
+use DB;
 
 class UserController extends Controller
 {
     public function editPassword()
     {
-        return \view('setting');
+        $v = DB::connection('sqlite')->table('config')->where('name', 'filter bot')->select('value')->first();
+        return \view('setting', \compact('v'));
     }
     public function changePassword(Request $request)
     {
@@ -34,6 +36,23 @@ class UserController extends Controller
             Alert::error('Wrong Password Confirmation', 'Ooohhh...');
 
             return redirect()->back();
+        }
+    }
+
+    public function toggleSwitch($filter = true)
+    {
+        try {
+            $val = 'false';
+            if ($filter == 'true') {
+                $val = 'true';
+            }
+            $a = DB::connection('sqlite')
+                ->table('config')
+                ->where('name', 'filter bot')
+                ->update(['value' => $val]);
+            return response()->json(["message" => $val], 200);
+        } catch (Exception $e) {
+            Log::warning("{can't toggle switch. message($e) ".date('d-M-Y H:i:s')."}");
         }
     }
 }

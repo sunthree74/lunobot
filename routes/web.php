@@ -30,6 +30,7 @@ Route::post('webhook', 'CommandController@webhookUpdate')->name('webhook');
 
 Route::get('setting', 'UserController@editPassword')->name('setting');
 Route::post('password/change', 'UserController@changePassword')->name('password.change');
+Route::get('toggleswitch/{filter}', 'UserController@toggleSwitch')->name('toggleswitch');
 
 Route::get('/edit/welcome', 'CommandController@editWelcomeMessage')->name('welcome.edit');
 Route::post('/update/welcome', 'CommandController@updateWelcomeMessage')->name('welcome.update');

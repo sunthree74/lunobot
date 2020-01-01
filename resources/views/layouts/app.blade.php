@@ -145,5 +145,7 @@
 <script src="{{ secure_asset('dist/js/adminlte.min.js') }}"></script>
 <!-- Summernote -->
 <script src="{{ secure_asset('plugins/summernote/summernote-bs4.min.js') }}"></script>
+<!-- Bootstrap Switch -->
+<script src="{{ secure_asset('plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
 </body>
 </html>
