@@ -278,17 +278,19 @@ class CommandController extends Controller
 
     public function getButton($cmd)
     {
-        $message = Command::where('command', $cmd)->first();
+        if (isset($cmd)) {
+            $message = Command::where('command', $cmd)->first();
 
-        if (isset($message)) {
-            if (\json_decode($message->links)) {
-                $link = \json_decode($message->links);
-                $title = \json_decode($message->link_title);
-                for ($i=0; $i < count(\json_decode($message->links)); $i++) { 
-                    $url[$i]['text'] = $title[$i];
-                    $url[$i]['url'] = $link[$i];
+            if (isset($message)) {
+                if (\json_decode($message->links)) {
+                    $link = \json_decode($message->links);
+                    $title = \json_decode($message->link_title);
+                    for ($i=0; $i < count(\json_decode($message->links)); $i++) { 
+                        $url[$i]['text'] = $title[$i];
+                        $url[$i]['url'] = $link[$i];
+                    }
+                    return $url;
                 }
-                return $url;
             }
         }
     }
@@ -510,11 +512,7 @@ class CommandController extends Controller
                 if ($m["message"]["new_chat_member"]["is_bot"] == true) {
                     $this->idchat = $m["message"]["chat"]["id"];
                     $this->kickMember($m["message"]["new_chat_member"]["id"]);
-                } else {
-                    return '@welcome';
                 }
-            } else {
-                return '@welcome';
             }
         }
     }
