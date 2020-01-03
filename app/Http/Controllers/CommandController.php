@@ -242,12 +242,16 @@ class CommandController extends Controller
                     $this->userData($sumber["chat"]["id"],$sumber["from"]["first_name"]);
                         if (isset($m["message"]["entities"])) {
                             if ( $m["message"]["entities"][0]["type"] == "bot_command") {
-                                if (strpos($cmd, env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME')) !== false) {
-                                    $cmd = str_replace(env('TELEGRAM_BOT_USERNAME', 'YOUR-BOT-USERNAME'), '', $cmd);
-                                    return $cmd;
-                                }else {
-                                    return $cmd;   
+                                if ($m["message"]["chat"]["type"] != "private") {
+                                    $usernamebot = env('TELEGRAM_BOT_USERNAME', 'NULL');
+                                    $usernamebot = str_replace("@","",$usernamebot);
+                                    $cmdExplode = explode("@", $cmd);
+                                    $username = $cmdExplode[1];
+                                    if ($username == $usernamebot) {
+                                        return $cmdExplode[0];
+                                    }  
                                 }
+                                return $cmd;
                             }
                         }
                 } elseif (isset($m["message"]["new_chat_member"])) {
@@ -270,8 +274,6 @@ class CommandController extends Controller
             }
             if (isset($message)) {
                 return $message->message;
-            } else {
-                return 'The command was wrong';
             }
         }
     }
