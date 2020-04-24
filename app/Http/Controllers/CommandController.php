@@ -17,7 +17,7 @@ use DB;
 
 class CommandController extends Controller
 {
-    private $client, $iduser, $clientBot, $idchat, $fname, $titleGroup, $btcprice, $ethprice, $btchigh, $btclow, $ethhigh, $ethlow, $randomNum1, $randomNum2, $hasilCaptcha, $messageId, $volumeBtc, $volumeEth;
+    private $client, $iduser, $clientBot, $idchat, $fname, $titleGroup, $btcprice, $ethprice, $xrpprice, $btchigh, $btclow, $ethhigh, $ethlow, $xrphigh, $xrplow, $randomNum1, $randomNum2, $hasilCaptcha, $messageId, $volumeBtc, $volumeEth, $volumeXrp;
 
     /**
      * Create a new controller instance.
@@ -197,8 +197,12 @@ class CommandController extends Controller
             $txt = str_replace('@ethereumprice@',$this->ethprice,$txt);
             $txt = str_replace('@ethereumhigh@',$this->ethhigh,$txt);
             $txt = str_replace('@ethereumlow@',$this->ethlow,$txt);
+            $txt = str_replace('@xrpprice@',$this->xrpprice,$txt);
+            $txt = str_replace('@xrphigh@',$this->xrphigh,$txt);
+            $txt = str_replace('@xrplow@',$this->xrplow,$txt);
             $txt = str_replace('@volumebtc@',$this->volumeBtc,$txt);
             $txt = str_replace('@volumeeth@',$this->volumeEth,$txt);
+            $txt = str_replace('@volumexrp@',$this->volumeXrp,$txt);
             $txt = str_replace('@date@',date('l, j F Y  H:i:s'),$txt);
             if (isset($btn)) {
                 $response = Telegram::sendMessage([
@@ -391,8 +395,10 @@ class CommandController extends Controller
     {
         $priceBtc = $this->getHilo();
         $priceEth = $this->getHilo('ETH');
+        $priceXrp = $this->getHilo('XRP');
         $volumeBtc = $this->getVolume();
         $volumeEth = $this->getVolume('ETH');
+        $volumeXrp = $this->getVolume('XRP');
 
         $this->btcprice = $this->getPrice();
         $this->btchigh = $priceBtc["High"];
@@ -401,9 +407,14 @@ class CommandController extends Controller
         $this->ethprice = $this->getPrice('ETH');
         $this->ethhigh = $priceEth["High"];
         $this->ethlow = $priceEth["Low"];
+        
+        $this->xrpprice = $this->getPrice('XRP');
+        $this->xrphigh = $priceEth["High"];
+        $this->xrplow = $priceEth["Low"];
 
         $this->volumeBtc = $volumeBtc;
         $this->volumeEth = $volumeEth;
+        $this->volumeXrp = $volumeXrp;
     }
 
     public function userData($idchat, $fname, $titleGroup = NULL)
