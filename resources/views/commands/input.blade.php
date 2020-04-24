@@ -65,10 +65,22 @@
                                 <b>@ethereumlow@ : </b> for showing lowest Ethereum price in 24 hour
                               </li>
                               <li>
+                                <b>@xrpprice@ : </b> for showing actual XRP price
+                              </li>
+                              <li>
+                                <b>@xrphigh@ : </b> for showing highest XRP price in 24 hour
+                              </li>
+                              <li>
+                                <b>@xrplow@ : </b> for showing lowest XRP price in 24 hour
+                              </li>
+                              <li>
                                 <b>@volumebtc@ : </b> for showing Bitcoin volume
                               </li>
                               <li>
                                 <b>@volumeeth@ : </b> for showing Ethereum volume
+                              </li>
+                              <li>
+                                <b>@volumexrp@ : </b> for showing XRP volume
                               </li>
                             </ul>
                           </p>
