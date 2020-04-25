@@ -68,8 +68,8 @@ class CommandController extends Controller
 
         try {
             $cmd = \trim($request->get('command'));
-            $links = NULL;
-            $link_titles = NULL;
+            $links = "[]";
+            $link_titles = "[]";
             if (!is_null($request->link[0])) {
                 $links = json_encode($request->get('link'));
                 $link_titles = json_encode($request->get('link_title'));
@@ -132,8 +132,8 @@ class CommandController extends Controller
                 $cmd->links = json_encode($request->get('link'));
                 $cmd->link_title = json_encode($request->get('link_title'));
             } else if (is_null($request->link[0])){
-                $cmd->links = NULL;
-                $cmd->link_title = NULL;
+                $cmd->links = "[]";
+                $cmd->link_title = "[]";
             }
             
             $cmd->save();
