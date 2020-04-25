@@ -25,7 +25,7 @@
                   <a class="btn close" href="{{route('command.edit', $cmd->id)}}" title="Edit Command"><i class="nav-icon fa fa-edit"></i></a>
                   <h5><b>{{$cmd->command}}</b></h5>
                   <p>{!!$cmd->message!!}</p>
-                  @if (!is_null($cmd->links[0]))
+                  @if (!empty($cmd->links))
                   <p>Button Link</p>
                       <ul>
                         @foreach (\json_decode($cmd->links) as $item)
