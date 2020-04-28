@@ -381,7 +381,7 @@ class CommandController extends Controller
             $body = (string) $response->getBody()->getContents();
             $data =  json_decode($body, true);
             $a = $data["rolling_24_hour_volume"];
-            return $a;
+            return number_format($a,2,'.',',');
         } else {
             return false;
         }
