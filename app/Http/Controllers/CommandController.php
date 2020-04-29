@@ -409,8 +409,8 @@ class CommandController extends Controller
         $this->ethlow = $priceEth["Low"];
         
         $this->xrpprice = $this->getPrice('XRP');
-        $this->xrphigh = $priceEth["High"];
-        $this->xrplow = $priceEth["Low"];
+        $this->xrphigh = $priceXrp["High"];
+        $this->xrplow = $priceXrp["Low"];
 
         $this->volumeBtc = $volumeBtc;
         $this->volumeEth = $volumeEth;
