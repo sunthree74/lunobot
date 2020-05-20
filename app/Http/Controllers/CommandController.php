@@ -523,8 +523,8 @@ class CommandController extends Controller
         if ($i != $idbot) {
             if ($this->isFilter()) {
                 if ($m["message"]["new_chat_member"]["is_bot"] == true) {
-                    $this->idchat = $m["message"]["chat"]["id"];
-                    $this->kickMember($m["message"]["new_chat_member"]["id"]);
+//                     $this->idchat = $m["message"]["chat"]["id"];
+//                     $this->kickMember($m["message"]["new_chat_member"]["id"]);
                 }
             }
         }
