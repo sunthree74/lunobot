@@ -25,4 +25,14 @@ class HomeController extends Controller
     {
         return view('commands.input');
     }
+    
+    /**
+     * Show the application dashboard.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function login()
+    {
+        return view('auth.login');
+    }
 }
