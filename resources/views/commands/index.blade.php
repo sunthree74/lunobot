@@ -64,7 +64,7 @@
 				  if (isConfirm){
             $.ajax({
               url: "{{ url('command') }}"+ '/' + params,
-              type: "POST",
+              type: "DELETE",
               data : {'_method' : 'DELETE', '_token' : csrf_token},
               success : function(){
                 swal("Deleted!", "Command Successfully Deleted.", "success");
