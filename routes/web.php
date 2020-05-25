@@ -13,9 +13,7 @@ if (env('APP_ENV') === 'production') {
 |
 */
 
-Route::get('/', function () {
-    return view('auth.login');
-});
+Route::get('/',  'HomeController@login');
 
 Auth::routes();
 
