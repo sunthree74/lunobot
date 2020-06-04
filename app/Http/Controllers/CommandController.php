@@ -388,7 +388,7 @@ class CommandController extends Controller
     }
 
     public function formatcurrency($floatcurr){
-        return "MYR " . number_format($floatcurr,1,'.',',');
+        return "MYR " . number_format($floatcurr,2,'.',',');
     }
 
     public function dynamicData()
